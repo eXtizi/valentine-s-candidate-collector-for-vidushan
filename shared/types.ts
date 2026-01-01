@@ -21,8 +21,14 @@ export interface ChatMessage {
 export interface Candidate {
   id: string;
   name: string;
+  email: string;
+  phone: string;
   instagram: string;
-  whyMe: string;
+  linkedIn: string;
+  resumeUrl: string;
+  experienceLevel: string;
+  motivation: string;
   dateIdea: string;
+  availability: string;
   createdAt: number;
 }

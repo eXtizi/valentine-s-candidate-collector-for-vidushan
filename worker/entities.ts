@@ -13,9 +13,15 @@ export class CandidateEntity extends IndexedEntity<Candidate> {
   static readonly initialState: Candidate = {
     id: "",
     name: "",
+    email: "",
+    phone: "",
     instagram: "",
-    whyMe: "",
+    linkedIn: "",
+    resumeUrl: "",
+    experienceLevel: "",
+    motivation: "",
     dateIdea: "",
+    availability: "",
     createdAt: 0
   };
 }
