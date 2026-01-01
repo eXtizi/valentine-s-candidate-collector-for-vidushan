@@ -5,7 +5,7 @@ import {
   Instagram, Calendar, User, Heart, Search, Filter,
   Download, Mail, Phone, ExternalLink, ArrowUpDown,
   ChevronRight, ChevronLeft, MoreHorizontal, Briefcase, FileText,
-  Trash2
+  Trash2, RefreshCw
 } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import type { Candidate } from '@shared/types';
@@ -24,13 +24,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+const FETCH_LIMIT = 50;
 export function AdminPage() {
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
   const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['candidates'],
-    queryFn: () => api<{ items: Candidate[]; next: string | null }>('/api/candidates'),
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
+    queryKey: ['candidates', cursor, FETCH_LIMIT],
+    queryFn: () => api<{ items: Candidate[]; next: string | null }>(`/api/candidates?limit=${FETCH_LIMIT}${cursor ? `&cursor=${cursor}` : ''}`),
   });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api(`/api/candidates/${id}`, { method: 'DELETE' }),
@@ -45,38 +48,61 @@ export function AdminPage() {
   const filteredCandidates = useMemo(() => {
     if (!data?.items) return [];
     let items = [...data.items];
-    // Search
+    // Search filter (Client-side for current page)
     if (search) {
       const s = search.toLowerCase();
-      items = items.filter(c => 
-        c.name.toLowerCase().includes(s) || 
-        c.email.toLowerCase().includes(s) || 
+      items = items.filter(c =>
+        c.name.toLowerCase().includes(s) ||
+        c.email.toLowerCase().includes(s) ||
         c.instagram.toLowerCase().includes(s) ||
         c.motivation.toLowerCase().includes(s)
       );
     }
-    // Sort
+    // Sort logic
     items.sort((a, b) => {
       return sortOrder === 'newest' ? b.createdAt - a.createdAt : a.createdAt - b.createdAt;
     });
     return items;
   }, [data, search, sortOrder]);
+  const handleNextPage = () => {
+    if (data?.next) {
+      setCursorHistory(prev => [...prev, cursor]);
+      setCursor(data.next);
+    }
+  };
+  const handlePrevPage = () => {
+    if (cursorHistory.length > 0) {
+      const prevCursors = [...cursorHistory];
+      const lastCursor = prevCursors.pop();
+      setCursorHistory(prevCursors);
+      setCursor(lastCursor ?? null);
+    }
+  };
   const downloadCSV = () => {
     if (!data?.items) return;
-    const headers = ["ID", "Name", "Email", "Phone", "Instagram", "LinkedIn", "Experience", "Motivation", "Date Idea", "Created At"];
+    const headers = ["ID", "Name", "Email", "Phone", "Instagram", "LinkedIn", "Experience", "Motivation", "Date Idea", "Availability", "Created At"];
     const rows = data.items.map(c => [
-      c.id, c.name, c.email, c.phone, c.instagram, c.linkedIn, c.experienceLevel,
-      `"${c.motivation.replace(/"/g, '""')}"`, `"${c.dateIdea.replace(/"/g, '""')}"`,
+      c.id, 
+      c.name.replace(/,/g, ''), 
+      c.email, 
+      c.phone || '', 
+      c.instagram, 
+      c.linkedIn || '', 
+      c.experienceLevel,
+      `"${c.motivation.replace(/"/g, '""')}"`, 
+      `"${c.dateIdea.replace(/"/g, '""')}"`,
+      `"${c.availability.replace(/"/g, '""')}"`,
       new Date(c.createdAt).toISOString()
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `vidushan_quest_2025_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `vidushan_quest_2025_page_${cursorHistory.length + 1}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.info("Exported current page to CSV");
   };
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this application? This action cannot be undone.")) {
@@ -88,29 +114,35 @@ export function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
         <h2 className="text-2xl font-bold text-destructive">Dashboard Unavailable</h2>
         <p className="text-muted-foreground mt-2">{(error as Error).message}</p>
+        <Button onClick={() => refetch()} variant="outline" className="mt-4 gap-2">
+          <RefreshCw className="w-4 h-4" /> Try Again
+        </Button>
       </div>
     );
   }
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <Toaster richColors />
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 -z-10 w-96 h-96 bg-rose-500/5 blur-[120px] rounded-full pointer-events-none" />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <Toaster richColors position="top-right" />
       <div className="py-8 md:py-10 lg:py-12">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Badge variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/50">Quest 2025</Badge>
-              <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Administrative Control</span>
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Admin Dashboard</span>
             </div>
-            <h1 className="text-4xl font-display font-bold">Candidate Review</h1>
-            <p className="text-muted-foreground mt-1">Manage and review {filteredCandidates.length} applications for Vidushan.</p>
+            <h1 className="text-4xl font-display font-bold flex items-center gap-3">
+              Candidate Review
+              {isFetching && <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}><RefreshCw className="w-5 h-5 text-rose-400" /></motion.div>}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Page {cursorHistory.length + 1} • Viewing {filteredCandidates.length} potential sparks.
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search candidates..." 
+              <Input
+                placeholder="Filter current view..."
                 className="pl-10 w-full md:w-[260px] bg-secondary border-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -136,33 +168,30 @@ export function AdminPage() {
         ) : filteredCandidates.length === 0 ? (
           <div className="text-center py-32 bg-secondary/20 rounded-3xl border-2 border-dashed border-border">
             <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-            <h3 className="text-xl font-medium">No results found</h3>
-            <p className="text-muted-foreground">Adjust your filters or keep marketing the quest!</p>
+            <h3 className="text-xl font-medium">No candidates yet</h3>
+            <p className="text-muted-foreground">The quest is still young. Keep sharing the landing page!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AnimatePresence>
+            <AnimatePresence mode="popLayout">
               {filteredCandidates.map((candidate, index) => (
-                <motion.div 
+                <motion.div
                   key={candidate.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.03 }}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: index * 0.02 }}
                 >
-                  <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 border-rose-50/50 dark:border-slate-800 hover:border-rose-200">
+                  <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 border-rose-100/50 hover:border-rose-300">
                     <CardHeader className="pb-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <CardTitle className="text-xl font-bold">{candidate.name}</CardTitle>
+                          <CardTitle className="text-xl font-bold line-clamp-1">{candidate.name}</CardTitle>
                           <div className="flex flex-wrap gap-2 pt-1">
                             <a href={`https://instagram.com/${candidate.instagram.replace('@', '')}`} target="_blank" rel="noreferrer" className="text-rose-600 flex items-center gap-1 text-xs font-semibold hover:underline bg-rose-50 px-2 py-0.5 rounded">
                               <Instagram className="w-3 h-3" /> {candidate.instagram}
                             </a>
-                            {candidate.linkedIn && (
-                              <a href={candidate.linkedIn} target="_blank" rel="noreferrer" className="text-blue-600 flex items-center gap-1 text-xs font-semibold hover:underline bg-blue-50 px-2 py-0.5 rounded">
-                                <ExternalLink className="w-3 h-3" /> LinkedIn
-                              </a>
-                            )}
                           </div>
                         </div>
                         <DropdownMenu>
@@ -170,12 +199,23 @@ export function AdminPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => window.open(`mailto:${candidate.email}`)}>Email Candidate</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => window.open(candidate.resumeUrl, '_blank')} disabled={!candidate.resumeUrl}>View Portfolio</DropdownMenuItem>
+                            <DropdownMenuLabel>Manage</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => window.open(`mailto:${candidate.email}`)} className="cursor-pointer">
+                              <Mail className="mr-2 h-4 w-4" /> Email Candidate
+                            </DropdownMenuItem>
+                            {candidate.linkedIn && (
+                              <DropdownMenuItem onClick={() => window.open(candidate.linkedIn, '_blank')} className="cursor-pointer">
+                                <ExternalLink className="mr-2 h-4 w-4" /> LinkedIn Profile
+                              </DropdownMenuItem>
+                            )}
+                            {candidate.resumeUrl && (
+                              <DropdownMenuItem onClick={() => window.open(candidate.resumeUrl, '_blank')} className="cursor-pointer">
+                                <FileText className="mr-2 h-4 w-4" /> View Portfolio
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive focus:text-destructive-foreground cursor-pointer"
                               onClick={() => handleDelete(candidate.id)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" /> Delete Application
@@ -184,51 +224,40 @@ export function AdminPage() {
                         </DropdownMenu>
                       </div>
                     </CardHeader>
-                    <CardContent className="flex-grow space-y-5 pt-0">
-                      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground font-medium">
+                    <CardContent className="flex-grow space-y-4 pt-0">
+                      <div className="flex flex-col gap-1.5 text-xs text-muted-foreground font-medium">
                         <div className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> {candidate.email}</div>
-                        <div className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {candidate.phone || 'N/A'}</div>
+                        <div className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> {candidate.phone || 'No phone provided'}</div>
                       </div>
-                      <div>
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-                          <User className="w-3 h-3" /> Why Me?
+                      <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                          <User className="w-3 h-3" /> The "Why Me"
                         </h4>
-                        <p className="text-sm leading-relaxed text-foreground/90 line-clamp-4 italic bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                        <p className="text-sm leading-relaxed text-foreground/90 line-clamp-3 italic">
                           "{candidate.motivation}"
                         </p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Level</h4>
-                          <Badge variant="secondary" className="text-[10px] uppercase">{candidate.experienceLevel}</Badge>
-                        </div>
-                        {candidate.resumeUrl && (
-                          <div>
-                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Portfolio</h4>
-                            <a href={candidate.resumeUrl} target="_blank" className="flex items-center gap-1 text-[10px] text-rose-500 font-bold hover:underline">
-                              <FileText className="w-3 h-3" /> View link
-                            </a>
-                          </div>
-                        )}
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-tighter">
+                          {candidate.experienceLevel.replace('-', ' ')}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground font-medium">ID: {candidate.id.split('-')[0]}</span>
                       </div>
-                      <Separator className="bg-rose-50/50" />
+                      <Separator className="bg-rose-50" />
                       <div>
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-                          <Heart className="w-3 h-3" /> Date Idea
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                          <Heart className="w-3 h-3" /> Ideal Date
                         </h4>
                         <p className="text-sm leading-relaxed text-foreground/80 line-clamp-2">{candidate.dateIdea}</p>
                       </div>
                     </CardContent>
-                    <CardFooter className="bg-slate-50/50 dark:bg-slate-900/50 py-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-tight">
+                    <CardFooter className="bg-slate-50/30 dark:bg-slate-900/30 py-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase">
                         <Calendar className="w-3 h-3" />
                         {new Date(candidate.createdAt).toLocaleDateString(undefined, {
                           month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                         })}
                       </div>
-                      <Badge variant="outline" className="text-[9px] bg-white dark:bg-slate-800">
-                        ID: {candidate.id.split('-')[0]}
-                      </Badge>
                     </CardFooter>
                   </Card>
                 </motion.div>
@@ -236,11 +265,29 @@ export function AdminPage() {
             </AnimatePresence>
           </div>
         )}
-        <div className="mt-12 flex items-center justify-between px-2">
-          <p className="text-sm text-muted-foreground">Showing {filteredCandidates.length} of {data?.items?.length ?? 0} total applications</p>
+        <div className="mt-12 flex items-center justify-between px-2 bg-secondary/10 p-4 rounded-xl border border-border/50">
+          <p className="text-sm text-muted-foreground">
+            {filteredCandidates.length > 0 ? `Showing results ${cursorHistory.length * FETCH_LIMIT + 1} - ${cursorHistory.length * FETCH_LIMIT + filteredCandidates.length}` : 'No results found'}
+          </p>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled className="gap-1"><ChevronLeft className="w-4 h-4" /> Previous</Button>
-            <Button variant="outline" size="sm" disabled={!data?.next} className="gap-1">Next <ChevronRight className="w-4 h-4" /></Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handlePrevPage} 
+              disabled={cursorHistory.length === 0}
+              className="gap-1 rounded-full h-10 px-4"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleNextPage} 
+              disabled={!data?.next}
+              className="gap-1 rounded-full h-10 px-4"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
