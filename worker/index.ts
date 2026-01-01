@@ -8,7 +8,7 @@ export * from './core-utils';
 
 type UserRoutesModule = { userRoutes: (app: Hono<{ Bindings: Env }>) => void };
 
-const USER_ROUTES_MODULE = './user-routes';
+const USER_ROUTES_MODULE = './user-routes.ts';
 const RETRY_MS = 750;
 let nextRetryAt = 0;
 let userRoutesLoaded = false;
