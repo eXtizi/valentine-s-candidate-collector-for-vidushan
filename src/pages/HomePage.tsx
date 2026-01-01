@@ -34,6 +34,103 @@ const formSchema = z.object({
   availability: z.string().min(5, "Tell us when you're free around Feb 14th"),
 });
 type FormValues = z.infer<typeof formSchema>;
+function ValentineIllustration() {
+  return (
+    <motion.div 
+      className="relative w-full h-full flex items-center justify-center p-8 cursor-pointer group"
+      initial="initial"
+      whileHover="hover"
+    >
+      {/* Decorative background circles */}
+      <motion.div 
+        className="absolute w-64 h-64 bg-rose-200/20 dark:bg-rose-900/10 rounded-full blur-3xl"
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 4, repeat: Infinity }}
+      />
+      {/* Main Heart Illustration */}
+      <motion.div
+        className="relative z-10"
+        animate={{ 
+          y: [0, -15, 0],
+          rotate: [0, -2, 2, 0]
+        }}
+        transition={{ 
+          duration: 5, 
+          repeat: Infinity,
+          ease: "easeInOut" 
+        }}
+      >
+        <svg 
+          viewBox="0 0 200 200" 
+          className="w-full h-full max-w-[300px] drop-shadow-2xl"
+          fill="none" 
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Hand-drawn style Heart */}
+          <motion.path
+            d="M100 160C100 160 30 120 30 70C30 45 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 45 170 70C170 120 100 160 100 160Z"
+            variants={{
+              initial: { fill: "#E2E8F0", stroke: "#94A3B8" }, // Grayscale
+              hover: { fill: "#E11D48", stroke: "#BE123C" }     // Vibrant Rose
+            }}
+            transition={{ duration: 0.5 }}
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Monogram 'V' */}
+          <motion.text
+            x="100"
+            y="105"
+            textAnchor="middle"
+            className="font-display font-bold text-5xl select-none"
+            variants={{
+              initial: { fill: "#475569" },
+              hover: { fill: "#FFFFFF" }
+            }}
+            transition={{ duration: 0.5 }}
+          >
+            V
+          </motion.text>
+          {/* Sparkles */}
+          <motion.g
+            variants={{
+              initial: { opacity: 0, scale: 0 },
+              hover: { opacity: 1, scale: 1 }
+            }}
+          >
+            <path d="M160 40L165 30L170 40L180 45L170 50L165 60L160 50L150 45L160 40Z" fill="#F59E0B" />
+            <path d="M40 140L45 130L50 140L60 145L50 150L45 160L40 150L30 145L40 140Z" fill="#F59E0B" />
+          </motion.g>
+          {/* Floating small hearts */}
+          <motion.path 
+            d="M140 130C140 130 132 125 132 119C132 116 134 114 136 114C138 114 139 115 140 116C141 115 142 114 144 114C146 114 148 116 148 119C148 125 140 130 140 130Z" 
+            variants={{
+              initial: { fill: "#CBD5E1" },
+              hover: { fill: "#FB7185" }
+            }}
+          />
+          <motion.path 
+            d="M60 50C60 50 52 45 52 39C52 36 54 34 56 34C58 34 59 35 60 36C61 35 62 34 64 34C66 34 68 36 68 39C68 45 60 50 60 50Z" 
+            variants={{
+              initial: { fill: "#CBD5E1" },
+              hover: { fill: "#FB7185" }
+            }}
+          />
+        </svg>
+      </motion.div>
+      {/* Pulsing Ring when hovered */}
+      <motion.div 
+        className="absolute inset-0 rounded-full border-2 border-rose-500/20"
+        variants={{
+          initial: { opacity: 0, scale: 0.8 },
+          hover: { opacity: 1, scale: 1.1 }
+        }}
+        transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse" }}
+      />
+    </motion.div>
+  );
+}
 export function HomePage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -161,14 +258,10 @@ export function HomePage() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="aspect-square rounded-3xl overflow-hidden shadow-2xl bg-rose-100 relative group"
+              className="aspect-square rounded-3xl overflow-hidden shadow-2xl bg-rose-50 dark:bg-slate-900 relative group flex items-center justify-center border border-rose-100 dark:border-slate-800"
             >
-              <img
-                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=1000"
-                alt="Portrait"
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-rose-600/20 to-transparent pointer-events-none" />
+              <ValentineIllustration />
+              <div className="absolute inset-0 bg-gradient-to-t from-rose-600/5 to-transparent pointer-events-none group-hover:from-rose-600/10 transition-all duration-500" />
             </motion.div>
           </div>
         </section>
