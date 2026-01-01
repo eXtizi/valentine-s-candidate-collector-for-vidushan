@@ -1,7 +1,6 @@
 import '@/lib/errorReporter';
 import { enableMapSet } from "immer";
 enableMapSet();
-import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   createBrowserRouter,
@@ -34,20 +33,14 @@ const router = createBrowserRouter([
   }
 ]);
 export function AppRoot() {
-  useEffect(() => {
-    const updateTitle = () => {
-      document.title = "Vidushan's Valentine Quest 2025";
-    };
-    updateTitle();
-  }, []);
   return <RouterProvider router={router} />;
 }
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
-        <AppRoot />
-      </ErrorBoundary>
-    </QueryClientProvider>
-  </StrictMode>,
-)
+  <QueryClientProvider client={queryClient}>
+    <ErrorBoundary>
+      <AppRoot />
+    </ErrorBoundary>
+  </QueryClientProvider>
+);
+
+document.title = "Vidushan's Valentine Quest 2025";
