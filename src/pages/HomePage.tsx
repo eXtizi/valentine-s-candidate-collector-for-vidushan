@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 import {
   Heart, Sparkles, Send, Instagram, CheckCircle2,
   ChevronDown, User, Mail, Phone, Link as LinkIcon,
-  Briefcase, MessageSquare, Calendar
+  Briefcase, MessageSquare, Calendar, ArrowRight
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -37,42 +37,42 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 function ValentineIllustration() {
   return (
-    <motion.div 
+    <motion.div
       className="relative w-full h-full flex items-center justify-center p-8 cursor-pointer group"
       initial="initial"
       whileHover="hover"
     >
-      <motion.div 
+      <motion.div
         className="absolute w-64 h-64 bg-rose-500/10 dark:bg-rose-500/5 rounded-full blur-3xl"
         animate={{ scale: [1, 1.15, 1] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         className="relative z-10"
-        animate={{ 
+        animate={{
           y: [0, -12, 0],
           rotate: [0, -1, 1, 0]
         }}
-        transition={{ 
-          duration: 4, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut"
         }}
       >
         <svg viewBox="0 0 200 200" className="w-full h-full max-w-[320px] drop-shadow-2xl" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <motion.path 
-            d="M100 160C100 160 30 120 30 70C30 45 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 45 170 70C170 120 100 160 100 160Z" 
+          <motion.path
+            d="M100 160C100 160 30 120 30 70C30 45 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 45 170 70C170 120 100 160 100 160Z"
             variants={{
               initial: { fill: "#f8fafc", stroke: "#e2e8f0" },
               hover: { fill: "#e11d48", stroke: "#be123c" }
             }}
             transition={{ duration: 0.6 }}
-            strokeWidth="3" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-          <motion.text 
-            x="100" y="105" textAnchor="middle" 
+          <motion.text
+            x="100" y="105" textAnchor="middle"
             className="font-display font-bold text-5xl select-none"
             variants={{
               initial: { fill: "#94a3b8" },
@@ -88,14 +88,6 @@ function ValentineIllustration() {
           </motion.g>
         </svg>
       </motion.div>
-      <motion.div 
-        className="absolute inset-0 rounded-full border-4 border-rose-500/10"
-        variants={{
-          initial: { opacity: 0, scale: 0.9 },
-          hover: { opacity: 1, scale: 1.2 }
-        }}
-        transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
-      />
     </motion.div>
   );
 }
@@ -104,11 +96,8 @@ export function HomePage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const formContainerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    document.title = "Vidushan's Valentine Quest 2025";
-  }, []);
   const triggerConfetti = () => {
-    const duration = 3 * 1000;
+    const duration = 4 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
     const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
@@ -122,6 +111,7 @@ export function HomePage() {
   };
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    mode: "onChange",
     defaultValues: {
       name: "",
       email: "",
@@ -145,29 +135,23 @@ export function HomePage() {
       setSubmitted(true);
       triggerConfetti();
       toast.success("Application sent successfully! Good luck.");
-      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
-      toast.error("Something went wrong. Please check your internet and try again.");
+      toast.error("Something went wrong. Please check your connection.");
     } finally {
       setLoading(false);
     }
   };
-  const scrollToApply = () => {
-    document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-  const scrollToAbout = () => {
-    document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
   const nextStep = async () => {
-    const fields = step === 1 
-      ? ['name', 'email', 'phone', 'instagram'] 
-      : step === 2 
-        ? ['experienceLevel'] 
-        : [];
-    const isValid = await form.trigger(fields as any);
+    let fieldsToValidate: (keyof FormValues)[] = [];
+    if (step === 1) fieldsToValidate = ['name', 'email', 'phone', 'instagram'];
+    if (step === 2) fieldsToValidate = ['experienceLevel', 'linkedIn', 'resumeUrl'];
+    const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       setStep(prev => Math.min(prev + 1, 3));
-      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      toast.error("Please fix the errors before proceeding.");
     }
   };
   return (
@@ -178,7 +162,7 @@ export function HomePage() {
         {/* Hero Section */}
         <section className="relative min-h-[85vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden rounded-4xl bg-rose-50/30 dark:bg-rose-950/10 mb-12 border border-rose-100 dark:border-rose-900/30">
           <div className="absolute inset-0 bg-gradient-mesh opacity-5 pointer-events-none" />
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
@@ -190,32 +174,33 @@ export function HomePage() {
             <h1 className="text-6xl md:text-8xl lg:text-9xl font-display font-bold tracking-tighter mb-8 leading-none">
               The <span className="text-gradient">Valentine</span> Quest
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed max-w-3xl mx-auto text-pretty">
-              Vidushan is looking for more than just a date. He's looking for a connection. 
+            <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed max-w-3xl mx-auto">
+              Vidushan is looking for more than just a date. He's looking for a connection.
               Are you the one to complete the picture?
             </p>
             <div className="flex flex-col sm:flex-row gap-5 justify-center">
-              <Button size="lg" onClick={scrollToApply} className="bg-rose-600 hover:bg-rose-700 text-white rounded-full px-12 h-16 text-xl font-bold shadow-xl shadow-rose-200 dark:shadow-none transition-all hover:scale-105">
-                Join the Quest
+              <Button 
+                size="lg" 
+                onClick={() => document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' })} 
+                className="bg-rose-600 hover:bg-rose-700 text-white rounded-full px-12 h-16 text-xl font-bold shadow-xl shadow-rose-200 dark:shadow-none transition-all hover:scale-105 active:scale-95 group"
+              >
+                Join the Quest <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button size="lg" variant="outline" onClick={scrollToAbout} className="rounded-full px-12 h-16 text-xl border-rose-200 text-rose-600 hover:bg-rose-50 transition-all">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                onClick={() => document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' })} 
+                className="rounded-full px-12 h-16 text-xl border-rose-200 text-rose-600 hover:bg-rose-50 transition-all"
+              >
                 The Story
               </Button>
             </div>
-          </motion.div>
-          <motion.div 
-            animate={{ y: [0, 15, 0] }}
-            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 cursor-pointer hidden md:block"
-            onClick={scrollToAbout}
-          >
-            <ChevronDown className="w-8 h-8 text-rose-300" />
           </motion.div>
         </section>
         {/* About Section */}
         <section id="about-section" className="py-24 scroll-mt-24">
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -225,11 +210,11 @@ export function HomePage() {
               <h2 className="text-5xl font-display font-bold tracking-tight">Meet Vidushan</h2>
               <div className="space-y-6">
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  Vidushan is an architect of experiences, a visionary who believes that the most meaningful connections 
+                  Vidushan is an architect of experiences, a visionary who believes that the most meaningful connections
                   happen at the intersection of ambition and authenticity.
                 </p>
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  This Valentine's Day, he's stepping away from the ordinary to find someone who challenges his perspective, 
+                  This Valentine's Day, he's stepping away from the ordinary to find someone who challenges his perspective,
                   shares his drive, and understands the art of a good conversation.
                 </p>
               </div>
@@ -241,7 +226,7 @@ export function HomePage() {
                 ))}
               </div>
             </motion.div>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -249,7 +234,6 @@ export function HomePage() {
               className="aspect-square rounded-[3rem] overflow-hidden shadow-3xl bg-white dark:bg-slate-900 border border-rose-100 dark:border-rose-900 relative flex items-center justify-center group"
             >
               <ValentineIllustration />
-              <div className="absolute inset-0 bg-gradient-to-t from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </motion.div>
           </div>
         </section>
@@ -258,11 +242,11 @@ export function HomePage() {
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-5xl font-display font-bold mb-6">The Application</h2>
-              <p className="text-xl text-muted-foreground">Your journey begins with a few honest words. We can't wait to meet you.</p>
+              <p className="text-xl text-muted-foreground">Your journey begins with a few honest words.</p>
             </div>
             <AnimatePresence mode="wait">
               {!submitted ? (
-                <motion.div 
+                <motion.div
                   key="form"
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -343,7 +327,7 @@ export function HomePage() {
                                 <FormField control={form.control} name="linkedIn" render={({ field }) => (
                                   <FormItem>
                                     <FormLabel className="text-lg font-semibold">LinkedIn <span className="text-sm font-normal text-muted-foreground">(Optional)</span></FormLabel>
-                                    <FormControl><Input placeholder="https://..." className="h-14 rounded-xl text-lg px-6" {...field} /></FormControl>
+                                    <FormControl><Input placeholder="https://linkedin.com/in/..." className="h-14 rounded-xl text-lg px-6" {...field} /></FormControl>
                                     <FormMessage />
                                   </FormItem>
                                 )} />
@@ -407,7 +391,7 @@ export function HomePage() {
                   </Card>
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   key="success"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -418,8 +402,7 @@ export function HomePage() {
                   </div>
                   <h3 className="text-4xl font-display font-bold mb-4">Quest Joined!</h3>
                   <p className="text-xl text-muted-foreground mb-12 max-w-md mx-auto">
-                    Your application is safe with us. Vidushan's team will review and 
-                    reach out if there's a match. Keep an eye on your DMs!
+                    Your application is safe with us. Vidushan will review and reach out if there's a match.
                   </p>
                   <Button variant="outline" onClick={() => { setSubmitted(false); setStep(1); form.reset(); }} className="rounded-full h-14 px-10 text-lg font-bold border-rose-100 text-rose-600">
                     Send Another?

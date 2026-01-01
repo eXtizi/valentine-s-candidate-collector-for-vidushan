@@ -13,7 +13,14 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import { AdminPage } from '@/pages/AdminPage'
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 const router = createBrowserRouter([
   {
     path: "/",
@@ -26,9 +33,12 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   }
 ]);
-function AppRoot() {
+export function AppRoot() {
   useEffect(() => {
-    document.title = "Vidushan's Valentine Quest 2025";
+    const updateTitle = () => {
+      document.title = "Vidushan's Valentine Quest 2025";
+    };
+    updateTitle();
   }, []);
   return <RouterProvider router={router} />;
 }
