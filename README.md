@@ -1,6 +1,6 @@
 # Cloudflare Workers Full-Stack React Template
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/eXtizi/valentine-s-candidate-collector-for-vidushan)
 
 A production-ready full-stack application template powered by Cloudflare Workers, featuring a React frontend with Vite, Hono backend, and Durable Objects for scalable stateful entities. This template includes a demo chat application with users, chat boards, and real-time messaging, demonstrating entity-based storage, indexing, and API routes.
 
@@ -94,7 +94,7 @@ bun run deploy
 3. **Deploy**: `bun run deploy` (builds frontend + deploys Worker).
 4. **Custom Domain**: `wrangler deploy --env production`.
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/eXtizi/valentine-s-candidate-collector-for-vidushan)
 
 **Notes**:
 - Assets served as SPA (single-page application).
