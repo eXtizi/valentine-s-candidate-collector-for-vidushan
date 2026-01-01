@@ -1,8 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import confetti from 'canvas-confetti';
 import {
   Heart, Sparkles, Send, Instagram, CheckCircle2,
   ChevronDown, User, Mail, Phone, Link as LinkIcon,
@@ -34,70 +35,44 @@ const formSchema = z.object({
   availability: z.string().min(5, "Tell us when you're free around Feb 14th"),
 });
 type FormValues = z.infer<typeof formSchema>;
-function Confetti() {
-  const particles = Array.from({ length: 40 });
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {particles.map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-2 h-2 rounded-full"
-          style={{
-            backgroundColor: i % 2 === 0 ? '#e11d48' : '#fbbf24',
-            left: '50%',
-            top: '50%',
-          }}
-          initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
-          animate={{
-            opacity: 0,
-            scale: 1,
-            x: (Math.random() - 0.5) * 600,
-            y: (Math.random() - 0.5) * 600,
-          }}
-          transition={{ duration: 2, ease: "easeOut" }}
-        />
-      ))}
-    </div>
-  );
-}
 function ValentineIllustration() {
   return (
-    <motion.div
+    <motion.div 
       className="relative w-full h-full flex items-center justify-center p-8 cursor-pointer group"
       initial="initial"
       whileHover="hover"
     >
-      <motion.div
+      <motion.div 
         className="absolute w-64 h-64 bg-rose-500/10 dark:bg-rose-500/5 rounded-full blur-3xl"
         animate={{ scale: [1, 1.15, 1] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
         className="relative z-10"
-        animate={{
+        animate={{ 
           y: [0, -12, 0],
           rotate: [0, -1, 1, 0]
         }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut"
+        transition={{ 
+          duration: 4, 
+          repeat: Infinity, 
+          ease: "easeInOut" 
         }}
       >
         <svg viewBox="0 0 200 200" className="w-full h-full max-w-[320px] drop-shadow-2xl" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <motion.path
-            d="M100 160C100 160 30 120 30 70C30 45 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 45 170 70C170 120 100 160 100 160Z"
+          <motion.path 
+            d="M100 160C100 160 30 120 30 70C30 45 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 45 170 70C170 120 100 160 100 160Z" 
             variants={{
               initial: { fill: "#f8fafc", stroke: "#e2e8f0" },
               hover: { fill: "#e11d48", stroke: "#be123c" }
             }}
             transition={{ duration: 0.6 }}
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            strokeWidth="3" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
           />
-          <motion.text
-            x="100" y="105" textAnchor="middle"
+          <motion.text 
+            x="100" y="105" textAnchor="middle" 
             className="font-display font-bold text-5xl select-none"
             variants={{
               initial: { fill: "#94a3b8" },
@@ -113,7 +88,7 @@ function ValentineIllustration() {
           </motion.g>
         </svg>
       </motion.div>
-      <motion.div
+      <motion.div 
         className="absolute inset-0 rounded-full border-4 border-rose-500/10"
         variants={{
           initial: { opacity: 0, scale: 0.9 },
@@ -129,6 +104,22 @@ export function HomePage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const formContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    document.title = "Vidushan's Valentine Quest 2025";
+  }, []);
+  const triggerConfetti = () => {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) return clearInterval(interval);
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+    }, 250);
+  };
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -152,6 +143,7 @@ export function HomePage() {
         body: JSON.stringify(values),
       });
       setSubmitted(true);
+      triggerConfetti();
       toast.success("Application sent successfully! Good luck.");
       formContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (error) {
@@ -186,7 +178,7 @@ export function HomePage() {
         {/* Hero Section */}
         <section className="relative min-h-[85vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden rounded-4xl bg-rose-50/30 dark:bg-rose-950/10 mb-12 border border-rose-100 dark:border-rose-900/30">
           <div className="absolute inset-0 bg-gradient-mesh opacity-5 pointer-events-none" />
-          <motion.div
+          <motion.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
@@ -211,7 +203,7 @@ export function HomePage() {
               </Button>
             </div>
           </motion.div>
-          <motion.div
+          <motion.div 
             animate={{ y: [0, 15, 0] }}
             transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
             className="absolute bottom-12 left-1/2 -translate-x-1/2 cursor-pointer hidden md:block"
@@ -223,7 +215,7 @@ export function HomePage() {
         {/* About Section */}
         <section id="about-section" className="py-24 scroll-mt-24">
           <div className="grid md:grid-cols-2 gap-16 items-center">
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -249,7 +241,7 @@ export function HomePage() {
                 ))}
               </div>
             </motion.div>
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
@@ -270,7 +262,7 @@ export function HomePage() {
             </div>
             <AnimatePresence mode="wait">
               {!submitted ? (
-                <motion.div
+                <motion.div 
                   key="form"
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -415,13 +407,12 @@ export function HomePage() {
                   </Card>
                 </motion.div>
               ) : (
-                <motion.div
+                <motion.div 
                   key="success"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="text-center p-16 bg-white dark:bg-slate-900 rounded-[3rem] shadow-3xl border border-rose-100 relative overflow-hidden"
                 >
-                  <Confetti />
                   <div className="w-24 h-24 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mx-auto mb-8 floating">
                     <CheckCircle2 className="w-12 h-12 text-rose-500" />
                   </div>

@@ -1,7 +1,7 @@
 import '@/lib/errorReporter';
 import { enableMapSet } from "immer";
 enableMapSet();
-import { StrictMode } from 'react'
+import { StrictMode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   createBrowserRouter,
@@ -26,11 +26,17 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
   }
 ]);
+function AppRoot() {
+  useEffect(() => {
+    document.title = "Vidushan's Valentine Quest 2025";
+  }, []);
+  return <RouterProvider router={router} />;
+}
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <RouterProvider router={router} />
+        <AppRoot />
       </ErrorBoundary>
     </QueryClientProvider>
   </StrictMode>,

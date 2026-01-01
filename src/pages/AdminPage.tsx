@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Instagram, Calendar, User, Heart, Search, Filter,
   Download, Mail, Phone, ExternalLink, ArrowUpDown,
   ChevronRight, ChevronLeft, MoreHorizontal, Briefcase, FileText,
-  Trash2, RefreshCw
+  Trash2, RefreshCw, Lock, Sparkles
 } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import type { Candidate } from '@shared/types';
@@ -25,15 +25,28 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 const FETCH_LIMIT = 50;
+const AUTH_KEY = 'quest_auth_token_2025';
+const SECRET_PASSWORD = 'damn123';
 export function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [password, setPassword] = useState('');
+  const [isChecking, setIsChecking] = useState(true);
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [cursor, setCursor] = useState<string | null>(null);
   const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([]);
   const queryClient = useQueryClient();
+  useEffect(() => {
+    const token = sessionStorage.getItem(AUTH_KEY);
+    if (token === 'granted') {
+      setIsAuthenticated(true);
+    }
+    setIsChecking(false);
+  }, []);
   const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ['candidates', cursor, FETCH_LIMIT],
     queryFn: () => api<{ items: Candidate[]; next: string | null }>(`/api/candidates?limit=${FETCH_LIMIT}${cursor ? `&cursor=${cursor}` : ''}`),
+    enabled: isAuthenticated,
   });
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api(`/api/candidates/${id}`, { method: 'DELETE' }),
@@ -48,7 +61,6 @@ export function AdminPage() {
   const filteredCandidates = useMemo(() => {
     if (!data?.items) return [];
     let items = [...data.items];
-    // Search filter (Client-side for current page)
     if (search) {
       const s = search.toLowerCase();
       items = items.filter(c =>
@@ -58,12 +70,22 @@ export function AdminPage() {
         c.motivation.toLowerCase().includes(s)
       );
     }
-    // Sort logic
     items.sort((a, b) => {
       return sortOrder === 'newest' ? b.createdAt - a.createdAt : a.createdAt - b.createdAt;
     });
     return items;
   }, [data, search, sortOrder]);
+  const handleLogin = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (password === SECRET_PASSWORD) {
+      sessionStorage.setItem(AUTH_KEY, 'granted');
+      setIsAuthenticated(true);
+      toast.success("Welcome back, Vidushan.");
+    } else {
+      toast.error("Unauthorized access attempt. Please try again.");
+      setPassword('');
+    }
+  };
   const handleNextPage = () => {
     if (data?.next) {
       setCursorHistory(prev => [...prev, cursor]);
@@ -82,14 +104,14 @@ export function AdminPage() {
     if (!data?.items) return;
     const headers = ["ID", "Name", "Email", "Phone", "Instagram", "LinkedIn", "Experience", "Motivation", "Date Idea", "Availability", "Created At"];
     const rows = data.items.map(c => [
-      c.id, 
-      c.name.replace(/,/g, ''), 
-      c.email, 
-      c.phone || '', 
-      c.instagram, 
-      c.linkedIn || '', 
+      c.id,
+      c.name.replace(/,/g, ''),
+      c.email,
+      c.phone || '',
+      c.instagram,
+      c.linkedIn || '',
       c.experienceLevel,
-      `"${c.motivation.replace(/"/g, '""')}"`, 
+      `"${c.motivation.replace(/"/g, '""')}"`,
       `"${c.dateIdea.replace(/"/g, '""')}"`,
       `"${c.availability.replace(/"/g, '""')}"`,
       new Date(c.createdAt).toISOString()
@@ -109,6 +131,53 @@ export function AdminPage() {
       deleteMutation.mutate(id);
     }
   };
+  if (isChecking) return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-xl">
+        <Toaster richColors position="top-center" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-md p-8"
+        >
+          <Card className="border-rose-100 shadow-2xl shadow-rose-200/50 rounded-3xl overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-rose-500 to-amber-500" />
+            <CardHeader className="text-center pt-10">
+              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-500">
+                <Lock className="w-8 h-8" />
+              </div>
+              <CardTitle className="text-3xl font-display font-bold">Admin Portal</CardTitle>
+              <p className="text-muted-foreground mt-2">Only Vidushan can see who's in the running.</p>
+            </CardHeader>
+            <CardContent className="p-8">
+              <form onSubmit={handleLogin} className="space-y-6">
+                <div className="space-y-2">
+                  <Input
+                    type="password"
+                    placeholder="Enter Secret Key"
+                    className="h-14 rounded-2xl text-center text-xl tracking-[0.5em] font-mono bg-secondary border-none"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <Button type="submit" className="w-full h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-lg font-bold shadow-lg shadow-rose-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                  Unlock Quest Records
+                </Button>
+              </form>
+            </CardContent>
+            <CardFooter className="pb-8 justify-center">
+              <div className="flex items-center gap-2 text-rose-300">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-widest">Authorized Eyes Only</span>
+              </div>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
@@ -214,7 +283,7 @@ export function AdminPage() {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem
+                            <DropdownMenuItem 
                               className="text-destructive focus:bg-destructive focus:text-destructive-foreground cursor-pointer"
                               onClick={() => handleDelete(candidate.id)}
                             >
@@ -270,19 +339,19 @@ export function AdminPage() {
             {filteredCandidates.length > 0 ? `Showing results ${cursorHistory.length * FETCH_LIMIT + 1} - ${cursorHistory.length * FETCH_LIMIT + filteredCandidates.length}` : 'No results found'}
           </p>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handlePrevPage} 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrevPage}
               disabled={cursorHistory.length === 0}
               className="gap-1 rounded-full h-10 px-4"
             >
               <ChevronLeft className="w-4 h-4" /> Previous
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleNextPage} 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNextPage}
               disabled={!data?.next}
               className="gap-1 rounded-full h-10 px-4"
             >
