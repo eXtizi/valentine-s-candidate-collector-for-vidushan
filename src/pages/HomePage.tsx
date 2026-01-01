@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  Heart, Sparkles, Send, Instagram, CheckCircle2, 
-  ChevronDown, User, Mail, Phone, Link as LinkIcon, 
-  Briefcase, MessageSquare, Calendar 
+import {
+  Heart, Sparkles, Send, Instagram, CheckCircle2,
+  ChevronDown, User, Mail, Phone, Link as LinkIcon,
+  Briefcase, MessageSquare, Calendar
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -70,9 +70,9 @@ export function HomePage() {
     document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' });
   };
   const nextStep = async () => {
-    const fields = step === 1 
-      ? ['name', 'email', 'phone', 'instagram'] 
-      : step === 2 
+    const fields = step === 1
+      ? ['name', 'email', 'phone', 'instagram']
+      : step === 2
         ? ['linkedIn', 'resumeUrl', 'experienceLevel']
         : ['motivation', 'dateIdea', 'availability'];
     const isValid = await form.trigger(fields as any);
@@ -93,13 +93,13 @@ export function HomePage() {
             className="relative z-10 max-w-4xl"
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-semibold mb-6 border border-rose-100 uppercase tracking-widest">
-              <Heart className="w-3 h-3 fill-current" /> Valentine's 2024 Quest
+              <Heart className="w-3 h-3 fill-current" /> Valentine's 2025 Quest
             </div>
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight mb-6">
-              Win a Date with <span className="text-rose-600">Vidushan</span>
+              Win a Date with <span className="bg-gradient-to-r from-rose-600 to-amber-500 bg-clip-text text-transparent">Vidushan</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl mx-auto">
-              This February 14th, join Vidushan for an evening of elegance and connection. 
+              This February 14th, join Vidushan for an evening of elegance and connection.
               We're looking for someone authentic, ambitious, and ready for a memorable experience.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -131,9 +131,9 @@ export function HomePage() {
             >
               <h2 className="text-4xl font-display font-bold">The Man of the Hour</h2>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Vidushan is a blend of modern ambition and classic romance. He values intellect, 
-                a great sense of humor, and the ability to appreciate the small moments that make 
-                life beautiful. Whether it's a quiet rooftop lounge or a hidden gallery opening, 
+                Vidushan is a blend of modern ambition and classic romance. He values intellect,
+                a great sense of humor, and the ability to appreciate the small moments that make
+                life beautiful. Whether it's a quiet rooftop lounge or a hidden gallery opening,
                 he knows how to curate an evening.
               </p>
               <div className="flex flex-wrap gap-4">
@@ -289,8 +289,8 @@ export function HomePage() {
                                 )} />
                                 <FormField control={form.control} name="availability" render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Availability (Feb 14-16)</FormLabel>
-                                    <FormControl><div className="relative"><Calendar className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" /><Textarea placeholder="I'm free on Wednesday evening..." className="pl-10 min-h-[100px] resize-none" {...field} /></div></FormControl>
+                                    <FormLabel>Availability (Feb 14-16, 2025)</FormLabel>
+                                    <FormControl><div className="relative"><Calendar className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" /><Textarea placeholder="I'm free on Friday evening..." className="pl-10 min-h-[100px] resize-none" {...field} /></div></FormControl>
                                     <FormMessage />
                                   </FormItem>
                                 )} />
@@ -330,7 +330,7 @@ export function HomePage() {
                   </div>
                   <h3 className="text-3xl font-display font-bold mb-3">Quest Joined!</h3>
                   <p className="text-muted-foreground mb-8 text-lg">
-                    Thank you for applying. Vidushan's team will review your application and 
+                    Thank you for applying. Vidushan's team will review your application and
                     reach out via Instagram or Email if there's a spark.
                   </p>
                   <Button variant="outline" onClick={() => { setSubmitted(false); setStep(1); form.reset(); }} className="rounded-full">
@@ -342,7 +342,7 @@ export function HomePage() {
           </div>
         </section>
         <footer className="py-12 text-center text-muted-foreground border-t border-border/50">
-          <p className="text-sm font-medium">Made with ❤️ for Vidushan's Valentine Quest 2024</p>
+          <p className="text-sm font-medium">Made with ❤️ for Vidushan's Valentine Quest 2025</p>
         </footer>
       </div>
     </div>

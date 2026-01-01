@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Instagram, Calendar, User, Heart, Search, Filter, 
-  Download, Mail, Phone, ExternalLink, ArrowUpDown, 
+import {
+  Instagram, Calendar, User, Heart, Search, Filter,
+  Download, Mail, Phone, ExternalLink, ArrowUpDown,
   ChevronRight, ChevronLeft, MoreHorizontal, Briefcase, FileText
 } from 'lucide-react';
 import { api } from '@/lib/api-client';
@@ -14,13 +14,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 export function AdminPage() {
   const [search, setSearch] = useState('');
@@ -35,9 +35,9 @@ export function AdminPage() {
     // Search
     if (search) {
       const s = search.toLowerCase();
-      items = items.filter(c => 
-        c.name.toLowerCase().includes(s) || 
-        c.email.toLowerCase().includes(s) || 
+      items = items.filter(c =>
+        c.name.toLowerCase().includes(s) ||
+        c.email.toLowerCase().includes(s) ||
         c.instagram.toLowerCase().includes(s) ||
         c.motivation.toLowerCase().includes(s)
       );
@@ -52,15 +52,15 @@ export function AdminPage() {
     if (!data?.items) return;
     const headers = ["ID", "Name", "Email", "Phone", "Instagram", "LinkedIn", "Experience", "Motivation", "Date Idea", "Created At"];
     const rows = data.items.map(c => [
-      c.id, c.name, c.email, c.phone, c.instagram, c.linkedIn, c.experienceLevel, 
-      `"${c.motivation.replace(/"/g, '""')}"`, `"${c.dateIdea.replace(/"/g, '""')}"`, 
+      c.id, c.name, c.email, c.phone, c.instagram, c.linkedIn, c.experienceLevel,
+      `"${c.motivation.replace(/"/g, '""')}"`, `"${c.dateIdea.replace(/"/g, '""')}"`,
       new Date(c.createdAt).toISOString()
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `vidushan_candidates_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `vidushan_quest_2025_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -74,19 +74,25 @@ export function AdminPage() {
     );
   }
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background decoration to match Landing Page */}
+      <div className="absolute top-0 right-0 -z-10 w-96 h-96 bg-rose-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="py-8 md:py-10 lg:py-12">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
-            <h1 className="text-4xl font-display font-bold">Quest Dashboard</h1>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/50">Quest 2025</Badge>
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">Administrative Control</span>
+            </div>
+            <h1 className="text-4xl font-display font-bold">Candidate Review</h1>
             <p className="text-muted-foreground mt-1">Manage and review {filteredCandidates.length} applications for Vidushan.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search candidates..." 
-                className="pl-10 w-full md:w-[260px] bg-secondary border-none" 
+              <Input
+                placeholder="Search candidates..."
+                className="pl-10 w-full md:w-[260px] bg-secondary border-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -192,8 +198,8 @@ export function AdminPage() {
                     <CardFooter className="bg-slate-50/50 dark:bg-slate-900/50 py-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-tight">
                         <Calendar className="w-3 h-3" />
-                        {new Date(candidate.createdAt).toLocaleDateString(undefined, { 
-                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                        {new Date(candidate.createdAt).toLocaleDateString(undefined, {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                         })}
                       </div>
                       <Badge variant="outline" className="text-[9px] bg-white dark:bg-slate-800">
