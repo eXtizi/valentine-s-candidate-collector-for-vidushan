@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Instagram, Calendar, User, Heart, Search, Filter,
   Download, Mail, Phone, ExternalLink, ArrowUpDown,
-  ChevronRight, ChevronLeft, MoreHorizontal, Briefcase, FileText
+  ChevronRight, ChevronLeft, MoreHorizontal, Briefcase, FileText,
+  Trash2
 } from 'lucide-react';
 import { api } from '@/lib/api-client';
 import type { Candidate } from '@shared/types';
@@ -14,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { Toaster, toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +27,20 @@ import {
 export function AdminPage() {
   const [search, setSearch] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ['candidates'],
     queryFn: () => api<{ items: Candidate[]; next: string | null }>('/api/candidates'),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api(`/api/candidates/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      toast.success("Application deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete application");
+    }
   });
   const filteredCandidates = useMemo(() => {
     if (!data?.items) return [];
@@ -35,9 +48,9 @@ export function AdminPage() {
     // Search
     if (search) {
       const s = search.toLowerCase();
-      items = items.filter(c =>
-        c.name.toLowerCase().includes(s) ||
-        c.email.toLowerCase().includes(s) ||
+      items = items.filter(c => 
+        c.name.toLowerCase().includes(s) || 
+        c.email.toLowerCase().includes(s) || 
         c.instagram.toLowerCase().includes(s) ||
         c.motivation.toLowerCase().includes(s)
       );
@@ -65,6 +78,11 @@ export function AdminPage() {
     link.click();
     document.body.removeChild(link);
   };
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this application? This action cannot be undone.")) {
+      deleteMutation.mutate(id);
+    }
+  };
   if (error) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
@@ -75,7 +93,8 @@ export function AdminPage() {
   }
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background decoration to match Landing Page */}
+      <Toaster richColors />
+      {/* Background decoration */}
       <div className="absolute top-0 right-0 -z-10 w-96 h-96 bg-rose-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="py-8 md:py-10 lg:py-12">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
@@ -90,8 +109,8 @@ export function AdminPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search candidates..."
+              <Input 
+                placeholder="Search candidates..." 
                 className="pl-10 w-full md:w-[260px] bg-secondary border-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -124,7 +143,7 @@ export function AdminPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence>
               {filteredCandidates.map((candidate, index) => (
-                <motion.div
+                <motion.div 
                   key={candidate.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -153,9 +172,14 @@ export function AdminPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => window.open(`mailto:${candidate.email}`)}>Email Candidate</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => window.open(candidate.resumeUrl, '_blank')}>View Resume</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.open(candidate.resumeUrl, '_blank')} disabled={!candidate.resumeUrl}>View Portfolio</DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-destructive">Archive Profile</DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                              onClick={() => handleDelete(candidate.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete Application
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -180,7 +204,7 @@ export function AdminPage() {
                         </div>
                         {candidate.resumeUrl && (
                           <div>
-                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Resume</h4>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Portfolio</h4>
                             <a href={candidate.resumeUrl} target="_blank" className="flex items-center gap-1 text-[10px] text-rose-500 font-bold hover:underline">
                               <FileText className="w-3 h-3" /> View link
                             </a>

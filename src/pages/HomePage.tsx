@@ -22,7 +22,10 @@ const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
-  instagram: z.string().min(1, "Social handle is required").startsWith("@", "Handle must start with @"),
+  instagram: z.string()
+    .min(2, "Social handle is required")
+    .startsWith("@", "Handle must start with @")
+    .refine((val) => val.length > 1, "Please enter a valid handle"),
   linkedIn: z.string().url("Must be a valid URL").or(z.literal("")),
   resumeUrl: z.string().url("Must be a valid URL").or(z.literal("")),
   experienceLevel: z.string().min(1, "Please select an experience level"),
@@ -69,6 +72,9 @@ export function HomePage() {
   const scrollToApply = () => {
     document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' });
   };
+  const scrollToAbout = () => {
+    document.getElementById('about-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
   const nextStep = async () => {
     const fields = step === 1
       ? ['name', 'email', 'phone', 'instagram']
@@ -106,7 +112,7 @@ export function HomePage() {
               <Button size="lg" onClick={scrollToApply} className="bg-rose-600 hover:bg-rose-700 text-white rounded-full px-8 h-14 text-lg">
                 Apply Now
               </Button>
-              <Button size="lg" variant="outline" onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })} className="rounded-full px-8 h-14 text-lg border-rose-200 text-rose-600 hover:bg-rose-50">
+              <Button size="lg" variant="outline" onClick={scrollToAbout} className="rounded-full px-8 h-14 text-lg border-rose-200 text-rose-600 hover:bg-rose-50">
                 Who is Vidushan?
               </Button>
             </div>
@@ -115,13 +121,13 @@ export function HomePage() {
             animate={{ y: [0, 10, 0] }}
             transition={{ repeat: Infinity, duration: 2 }}
             className="absolute bottom-10 left-1/2 -translate-x-1/2 cursor-pointer hidden md:block"
-            onClick={scrollToApply}
+            onClick={scrollToAbout}
           >
             <ChevronDown className="w-6 h-6 text-muted-foreground" />
           </motion.div>
         </section>
         {/* About Section */}
-        <section className="py-20">
+        <section id="about-section" className="py-20 scroll-mt-12">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -167,7 +173,7 @@ export function HomePage() {
           </div>
         </section>
         {/* Application Form */}
-        <section id="apply-form" className="py-24">
+        <section id="apply-form" className="py-24 scroll-mt-12">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-display font-bold mb-4">Official Application</h2>
@@ -236,14 +242,14 @@ export function HomePage() {
                               <div className="grid md:grid-cols-2 gap-6">
                                 <FormField control={form.control} name="linkedIn" render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>LinkedIn Profile</FormLabel>
+                                    <FormLabel>LinkedIn Profile <span className="text-xs font-normal text-muted-foreground">(Optional)</span></FormLabel>
                                     <FormControl><div className="relative"><LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="https://linkedin.com/in/..." className="pl-10 h-12" {...field} /></div></FormControl>
                                     <FormMessage />
                                   </FormItem>
                                 )} />
                                 <FormField control={form.control} name="resumeUrl" render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>Resume/Portfolio Link</FormLabel>
+                                    <FormLabel>Portfolio/Resume <span className="text-xs font-normal text-muted-foreground">(Optional)</span></FormLabel>
                                     <FormControl><div className="relative"><LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="https://..." className="pl-10 h-12" {...field} /></div></FormControl>
                                     <FormMessage />
                                   </FormItem>
